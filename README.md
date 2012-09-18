@@ -2,7 +2,7 @@
 
 Rails 3.2 introduced [ActiveRecord::Store](http://api.rubyonrails.org/classes/ActiveRecord/Store.html), which offers simple single-column key-value stores.
 
-It's a nice feature, but its accessors are limited to primitive values (e.g. `String`, `Integer`, etc.) and if you want to store structured values (e.g. `Hash`, `Set`, etc.), it doesn't work out of the box.
+It's a nice feature, but its accessors are limited to primitive values (e.g. `String`, `Integer`, etc.) and it doesn't work out of the box if you want to store structured values. (e.g. `Hash`, `Set`, etc.)
 
 Here's an example.
 
@@ -17,9 +17,9 @@ user.tutorials[:quick_start] = :visited     # => NoMethodError: undefined method
 
 There are two ways to solve this problem - a. break down `options` into multiple columns like `tutorials` and `preference`, or b. define an accessor method for each to initialize with an empty `Hash` when accessed for the first time.
 
-The former is bad because the TEXT (or BLOB) datatype could be [stored off-page](http://www.mysqlperformanceblog.com/2010/02/09/blob-storage-in-innodb/) when it gets big and you could hit some strange bugs with performance penalty. Furthermore, adding columns kills the primary purpose of having key-value store - you use this feature because you don't like migrations, right? So it's two-fold bad.
+The former is bad because the TEXT (or BLOB) column type could be [stored off-page](http://www.mysqlperformanceblog.com/2010/02/09/blob-storage-in-innodb/) when it gets big and you could hit some strange bugs and/or performance penalty. Furthermore, adding columns kills the primary purpose of having key-value store - you use this feature because you don't like migrations, right? So it's two-fold bad.
 
-StoreField takes the latter approach. It defines accessors that sets an empty `Hash` or `Set` automatically. Now you have a single TEXT column for everything.
+StoreField takes the latter approach. It defines accessors that initializes with an empty `Hash` or `Set` automatically. Now you have a single TEXT column for everything!
 
 ## Usage
 
@@ -69,7 +69,7 @@ cart.funnel                     # => #<Set: {}>
 cart.set_funnel(:add_item)
 cart.set_funnel(:checkout)
 cart.set_funnel?(:checkout)     # => true
-cart.funnel                     # => #<Set: {:add_to_cart, :checkout}>
+cart.funnel                     # => #<Set: {:add_item, :checkout}>
 ```
 
 `set_[field]` and `unset_[field]` return `self`, so you can call `save` in chain.
@@ -95,13 +95,13 @@ Depending on at what time the above code gets run (daily, hourly, etc.), email c
 ```ruby
 class User < ActiveRecord::Base
   store :storage
-  store_field :notified, type: Set
+  store_field :delivered, type: Set
 end
 
-if user.bandwidth_usage > 250.megabytes and !user.set_notified?(:nearing_limit)
+if user.bandwidth_usage > 250.megabytes and !user.set_delivered?(:nearing_limit)
   Email.to user, message: 'Your data plan usage is nearing 300MB limit'
-  user.set_notified(:nearing_limit).save
+  user.set_delivered(:nearing_limit).save
 end
 ```
 
-That way, the user won't receive the same alert again, until `unset_notified` is called when the next billing cycle starts.
+That way, the user won't receive the same alert again, until `unset_delivered` is called when the next billing cycle starts.
