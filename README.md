@@ -2,7 +2,7 @@
 
 Rails 3.2 introduced [ActiveRecord::Store](http://api.rubyonrails.org/classes/ActiveRecord/Store.html), which offers simple single-column key-value stores.
 
-It's a nice feature, but what it offers is limited to accessors for primitive values (e.g. `String` or `Integer`) and if you want to store structured values (e.g. `Hash` or `Set`), it doesn't work out of the box.
+It's a nice feature, but its accessors are limited to primitive values (e.g. `String`, `Integer`, etc.) and if you want to store structured values (e.g. `Hash`, `Set`, etc.), it doesn't work out of the box.
 
 Here's an example.
 
@@ -15,11 +15,11 @@ user = User.new
 user.tutorials[:quick_start] = :visited     # => NoMethodError: undefined method `[]=' for nil:NilClass
 ```
 
-There are two ways to solve this problem - a. break down `options` into multiple columns like `tutorials` and `caches`, or b. define an accessor method for each to initialize the default value with an empty `Hash`.
+There are two ways to solve this problem - a. break down `options` into multiple columns like `tutorials` and `preference`, or b. define an accessor method for each to initialize with an empty `Hash` when accessed for the first time.
 
-The former is bad because the TEXT (or BLOB) datatype is generally stored off-page and it already requires doubled random I/O, and adding more columns leads to poor performance. Also, adding columns kills the primary purpose of having key-value store - you use this feature because you don't like migrations, right? So it's two-fold bad.
+The former is bad because the TEXT (or BLOB) datatype could be [stored off-page](http://www.mysqlperformanceblog.com/2010/02/09/blob-storage-in-innodb/) when it gets big and you could hit some strange bugs with performance penalty. Furthermore, adding columns kills the primary purpose of having key-value store - you use this feature because you don't like migrations, right? So it's two-fold bad.
 
-StoreField uses the latter approach. It adds accessors that sets an empty `Hash` or `Set` when accessed for the first time.
+StoreField takes the latter approach. It defines accessors that sets an empty `Hash` or `Set` automatically. Now you have a single TEXT column for everything.
 
 ## Usage
 
@@ -45,15 +45,15 @@ user = User.new
 user.tutorials[:quick_start] = :finished
 ```
 
-When option is not given, it defaults to the first serialized column with `Hash` datatype. So `store_field :tutorials` is equivalent to the following.
+When no option is given, it defaults to the first serialized column, using the `Hash` datatype. So `store_field :tutorials` is equivalent to the following.
 
 ```ruby
 store_field :tutorials, in: :storage, type: Hash
 ```
 
-## Set support
+## Typing support for Set
 
-In addition to `Hash`, StoreField supports `Set` datatype. To use Set, simply pass `type: Set` option.
+In addition to `Hash`, StoreField supports the `Set` data type. To use Set, simply pass `type: Set` option.
 
 It turns out that Set is extremely useful most of the time when you think what you need is `Array`.
 
@@ -61,7 +61,7 @@ It turns out that Set is extremely useful most of the time when you think what y
 store_field :funnel, type: Set
 ```
 
-It defines some utility methods - `set_[field]`, `unset_[field]`, `set_[field]?` and `unset_[field]?`.
+It defines several utility methods - `set_[field]`, `unset_[field]`, `set_[field]?` and `unset_[field]?`.
 
 ```ruby
 cart = Cart.new
@@ -78,7 +78,7 @@ cart.funnel                     # => #<Set: {:add_to_cart, :checkout}>
 cart.set_funnel(:checkout).save!    # => true
 ```
 
-## Use cases for Set type
+## Use cases for the Set type
 
 Set is a great way to store an arbitrary number of states.
 
