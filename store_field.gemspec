@@ -8,8 +8,8 @@ Gem::Specification.new do |gem|
   gem.version       = StoreField::VERSION
   gem.authors       = ['Kenn Ejima']
   gem.email         = ['kenn.ejima@gmail.com']
-  gem.description   = %q{Typed fields for ActiveRecord::Store}
-  gem.summary       = %q{Typed fields for ActiveRecord::Store}
+  gem.description   = %q{Nested fields for ActiveRecord::Store}
+  gem.summary       = %q{Nested fields for ActiveRecord::Store}
   gem.homepage      = 'https://github.com/kenn/store_field'
 
   gem.files         = `git ls-files`.split($/)
