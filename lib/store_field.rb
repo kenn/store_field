@@ -10,6 +10,7 @@ module StoreField
       raise ArgumentError.new(':in is invalid')   if options[:in] and serialized_attributes[options[:in].to_s].nil?
       raise ArgumentError.new(':type is invalid') if options[:type] and ![ Hash, Set ].include?(options[:type])
 
+      klass = options[:type]
       store_attribute = options[:in] || serialized_attributes.keys.first
       raise ArgumentError.new('store method must be defined before store_field') if store_attribute.nil?
 
@@ -17,7 +18,7 @@ module StoreField
       define_method(key) do
         value = send("#{store_attribute}")[key]
         if value.nil?
-          value = store_field_init(options[:type])
+          value = klass ? klass.new : {}
           send("#{store_attribute}")[key] = value
         end
         value
@@ -32,11 +33,4 @@ module StoreField
       end
     end
   end
-
-  def store_field_init(klass)
-    return {} unless klass
-    klass.new
-  end
 end
-
-ActiveRecord::Base.send(:include, StoreField)
