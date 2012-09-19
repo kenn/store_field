@@ -105,3 +105,25 @@ end
 ```
 
 That way, the user won't receive the same alert again, until `unset_delivered` is called when the next billing cycle starts.
+
+## YAML serialization
+
+ActiveRecord::Store uses YAML to serialize Ruby objects. A StoreField will be stored as follows:
+
+```yaml
+---
+:funnel: !ruby/object:Set
+  hash:
+    :add_item: true
+    :checkout: true
+```
+
+As you can see, the `Set` class internally uses `Hash` for its storage.
+
+There is a [known compatibility problem](http://bugs.ruby-lang.org/issues/6910) between `psych` and `syck`, be sure to use `psych` from the beginning.
+
+```ruby
+YAML::ENGINE.yamler     # => "psych"
+```
+
+If you are using Ruby 1.9.2 or later, `psych` should be used by default.
