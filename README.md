@@ -139,3 +139,8 @@ YAML::ENGINE.yamler     # => "psych"
 ```
 
 If you are using Ruby 1.9.2 or later, `psych` should be used by default.
+
+## Other Solutions
+
+* [StoreConfigurable](https://github.com/metaskills/store_configurable) - A zero-configuration recursive Hash for storing a tree of options.
+
