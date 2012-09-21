@@ -7,7 +7,7 @@ end
 class User < ActiveRecord::Base
   store :storage
   store_field :tutorials
-  store_field :delivered, type: Set
+  store_field :delivered, type: Set, values: [ :welcome, :balance_low ]
 end
 
 describe StoreField do
@@ -30,19 +30,22 @@ describe StoreField do
     @user.delivered.should == Set.new
   end
 
+  it 'raises when invalid value is given for Set' do
+    expect {
+      @user.set_delivered(:bogus)
+    }.to raise_error(ArgumentError)
+  end
+
   it 'sets and unsets keywords' do
     @user.set_delivered(:welcome)
-    @user.set_delivered(:first_deposit)
 
     # Consume balance, notify once and only once
     @user.set_delivered(:balance_low)
-    @user.set_delivered(:balance_negative)
 
     # Another deposit, restore balance
     @user.unset_delivered(:balance_low)
-    @user.unset_delivered(:balance_negative)
 
-    @user.delivered.should == Set.new([:welcome, :first_deposit])
+    @user.delivered.should == Set.new([:welcome])
   end
 
   it 'saves in-line' do

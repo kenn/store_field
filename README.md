@@ -17,9 +17,9 @@ user.tutorials[:quick_start] = :visited     # => NoMethodError: undefined method
 
 There are two ways to solve this problem - a. break down `options` into multiple columns like `tutorials` and `preference`, or b. define an accessor method for each to initialize with an empty `Hash` when accessed for the first time.
 
-The former is bad because the TEXT (or BLOB) column type could be [stored off-page](http://www.mysqlperformanceblog.com/2010/02/09/blob-storage-in-innodb/) when it gets big and you could hit some strange bugs and/or performance penalty. Furthermore, adding columns kills the primary purpose of having key-value store - you use this feature because you don't like migrations, right? So it's two-fold bad.
+The former is bad because the TEXT (or BLOB) column type could be stored off-page when it gets big and you could hit some [strange bugs and/or performance penalty](http://www.mysqlperformanceblog.com/2010/02/09/blob-storage-in-innodb/). Furthermore, adding columns kills the primary purpose of having key-value store - you use this feature because you don't like migrations, right? So it's two-fold bad.
 
-StoreField takes the latter approach. It defines accessors that initializes with an empty `Hash` or `Set` automatically. Now you have a single TEXT column for everything!
+StoreField takes the latter approach. It defines accessors that initialize with an empty `Hash` or `Set` automatically. Now you have a single TEXT column for everything!
 
 ## Usage
 
@@ -78,9 +78,21 @@ cart.funnel                     # => #<Set: {:add_item, :checkout}>
 cart.set_funnel(:checkout).save!    # => true
 ```
 
+Also you can enumerate acceptable values, which is validated on the `set_[field]` method.
+
+```ruby
+store_field :funnel, type: Set, values: [ :add_item, :checkout ]
+```
+
+With the definition above, the following code will raise an exception.
+
+```ruby
+set_funnel(:bogus)  # => ArgumentError: :bogus is not allowed
+```
+
 ## Use cases for the Set type
 
-Set is a great way to store an arbitrary number of states.
+Set is a great way to store an arbitrary number of named states.
 
 Consider you have a system that sends an alert when some criteria have been met.
 
