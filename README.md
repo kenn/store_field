@@ -78,7 +78,7 @@ cart.funnel                     # => #<Set: {:add_item, :checkout}>
 cart.set_funnel(:checkout).save!    # => true
 ```
 
-Also you can enumerate acceptable values, which is validated on the `set_[field]` method.
+Also you can enumerate acceptable values, which will be validated in the `set_[field]` method.
 
 ```ruby
 store_field :funnel, type: Set, values: [ :add_item, :checkout ]
