@@ -21,6 +21,10 @@ The former is bad because the TEXT (or BLOB) column type could be stored off-pag
 
 StoreField takes the latter approach. It defines accessors that initialize with an empty `Hash` or `Set` automatically. Now you have a single TEXT column for everything!
 
+Changelog:
+
+* v2.0.0: Hash-type supports `keys` option to add accessors for validation. Set-type with `values` option now adds a validation rather than raising an exception.
+
 ## Usage
 
 Add this line to your application's Gemfile.
@@ -45,17 +49,34 @@ user = User.new
 user.tutorials[:quick_start] = :finished
 ```
 
-When no option is given, it defaults to the first serialized column, using the `Hash` datatype. So `store_field :tutorials` is equivalent to the following.
+When no option is given, it defaults to the first serialized column, using Hash-type. So `store_field :tutorials` is equivalent to the following.
 
 ```ruby
 store_field :tutorials, in: :storage, type: Hash
 ```
 
-## Typing support for Set
+## Hash-type features
 
-In addition to `Hash`, StoreField supports the `Set` data type. To use Set, simply pass `type: Set` option.
+When the `keys` option is given for Hash-type, convenience accessors are automatically defined, which can be used for validation.
 
-It turns out that Set is extremely useful most of the time when you think what you need is `Array`.
+```ruby
+class User < ActiveRecord::Base
+  store_field :tutorials, keys: [ :quick_start ]
+
+  validates :tutorials_quick_start, inclusion: { in: [ :started, :finished ], allow_nil: true }
+end
+
+user = User.new
+user.tutorials_quick_start = :started
+user.valid?
+ => true
+```
+
+## Set-type features
+
+In addition to Hash-type, StoreField supports Set-type. To use Set-type, simply pass `type: Set` option.
+
+It turns out that Set-type is extremely useful most of the time when you think what you need is `Array`.
 
 ```ruby
 store_field :funnel, type: Set
@@ -78,21 +99,22 @@ cart.funnel                     # => #<Set: {:add_item, :checkout}>
 cart.set_funnel(:checkout).save!    # => true
 ```
 
-Also you can enumerate acceptable values, which will be validated in the `set_[field]` method.
+Also you can enumerate acceptable values for validation.
 
 ```ruby
-store_field :funnel, type: Set, values: [ :add_item, :checkout ]
+class Cart < ActiveRecord::Base
+  store_field :funnel, type: Set, values: [ :add_item, :checkout ]
+end
+
+cart = Cart.new
+cart.set_funnel(:bogus)
+cart.valid?
+ => false
 ```
 
-With the definition above, the following code will raise an exception.
+## Use cases for the Set-type
 
-```ruby
-set_funnel(:bogus)  # => ArgumentError: :bogus is not allowed
-```
-
-## Use cases for the Set type
-
-Set is a great way to store an arbitrary number of named states.
+Set-type is a great way to store an arbitrary number of named states.
 
 Consider you have a system that sends an alert when some criteria have been met.
 
